@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  ReactNode,
-} from "react";
+import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import authApi from "@/lib/api/authApi";
 import { socket } from "@/lib/socket";
@@ -27,13 +21,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  /* ================= RESTORE SESSION ================= */
+  /* ========== RESTORE SESSION ========== */
   useEffect(() => {
     authApi
       .me()
       .then((res) => {
         setUser(res.user);
-        socket.connect(); // ✅ CONNECT SOCKET AFTER AUTH RESTORE
+        socket.connect(); // ✅ CONNECT ONLY HERE
       })
       .catch(() => {
         setUser(null);
@@ -42,30 +36,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .finally(() => setLoading(false));
   }, []);
 
-  /* ================= LOGIN ================= */
+  /* ========== LOGIN ========== */
   const login = async (credentials: LoginCredentials) => {
     const res = await authApi.login(credentials);
     setUser(res.user);
 
-    socket.connect(); // ✅ CONNECT SOCKET ON LOGIN
+    socket.connect(); // ✅ CONNECT ON LOGIN
     router.replace(`/${res.user.role}/dashboard`);
   };
 
-  /* ================= SIGNUP ================= */
+  /* ========== SIGNUP ========== */
   const signup = async (data: SignupData) => {
     const res = await authApi.signup(data);
     setUser(res.user);
 
-    socket.connect(); // ✅ CONNECT SOCKET ON SIGNUP
+    socket.connect(); // ✅ CONNECT ON SIGNUP
     router.replace(`/${res.user.role}/dashboard`);
   };
 
-  /* ================= LOGOUT ================= */
+  /* ========== LOGOUT ========== */
   const logout = async () => {
     await authApi.logout();
     setUser(null);
 
-    socket.disconnect(); // ✅ DISCONNECT SOCKET ONLY HERE
+    socket.disconnect(); // ✅ DISCONNECT ONLY HERE
     router.replace("/auth/login");
   };
 

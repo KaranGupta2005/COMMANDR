@@ -57,7 +57,7 @@ export const initSocket = (httpServer) => {
       if (socket.role) socket.join(socket.role);
     } else {
       console.warn("⚠️ Unauthenticated socket:", socket.id);
-    } // role broadcasts
+    } 
 
     // handlers
     locationHandler(io, socket);

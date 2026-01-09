@@ -46,59 +46,60 @@ function formatRelativeTime(date: string) {
 export default function NotificationsPage() {
   const { notifications: socketNotifications, connected } = useSocket();
 
-  console.log("🔌 Socket connected:", connected);
-  console.log("🔔 Socket notifications count:", socketNotifications.length);
-  console.log("🔔 Latest socket notification:", socketNotifications[0]);
-
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
-  const [filter, setFilter] = useState<"all" | "unread" | NotificationType>("all");
+  const [filter, setFilter] = useState<
+    "all" | "unread" | NotificationType
+  >("all");
 
-  // 🔥 FIXED: Process ALL new socket notifications
+  /* ================= SOCKET → UI ================= */
+
   useEffect(() => {
-    if (!socketNotifications?.length) return;
+    if (!socketNotifications.length) return;
 
-    console.log("📱 Processing", socketNotifications.length, "socket notifications");
+    setNotifications((prev) => {
+      const newOnes: AppNotification[] = [];
 
-    // Process ALL notifications in the array (not just [0])
-    socketNotifications.forEach((socketNotif) => {
-      if (!socketNotif.payload) return;
+      socketNotifications.forEach((sn) => {
+        if (!sn.payload) return;
 
-      setNotifications((prev) => {
-        // Check if notification already exists (by timestamp + message)
-        const alreadyExists = prev.some(
+        const exists = prev.some(
           (n) =>
-            n.timestamp === socketNotif.payload!.createdAt &&
-            n.message === socketNotif.payload!.message
+            n.timestamp === sn.payload!.createdAt &&
+            n.message === sn.payload!.message
         );
 
-        if (alreadyExists) {
-          console.log("⏭️ Duplicate skipped:", socketNotif.payload.title);
-          return prev;
+        if (!exists) {
+          newOnes.push({
+            id: crypto.randomUUID(),
+            type: mapEventToType(sn.eventType),
+            title: sn.payload.title || "System Update",
+            message: sn.payload.message || "New notification",
+            timestamp: sn.payload.createdAt || new Date().toISOString(),
+            read: false,
+            actionable: !!sn.payload.actionable,
+          });
         }
-
-        const mapped: AppNotification = {
-          id: crypto.randomUUID(),
-          type: mapEventToType(socketNotif.eventType),
-          title: socketNotif.payload.title || "System Update",
-          message: socketNotif.payload.message || "New notification",
-          timestamp: socketNotif.payload.createdAt || new Date().toISOString(),
-          read: false,
-          actionable: !!socketNotif.payload.actionable,
-        };
-
-        console.log("✅ Added notification:", mapped.title);
-        return [mapped, ...prev];
       });
-    });
-  }, [socketNotifications.length]); // 🔥 Trigger on LENGTH change
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+      if (!newOnes.length) return prev;
+      return [...newOnes, ...prev];
+    });
+  }, [socketNotifications.length]);
+
+  /* ================= DERIVED ================= */
+
+  const unreadCount = useMemo(
+    () => notifications.filter((n) => !n.read).length,
+    [notifications]
+  );
 
   const filteredNotifications = useMemo(() => {
     if (filter === "all") return notifications;
     if (filter === "unread") return notifications.filter((n) => !n.read);
     return notifications.filter((n) => n.type === filter);
   }, [notifications, filter]);
+
+  /* ================= ACTIONS ================= */
 
   const markAsRead = useCallback((id: string) => {
     setNotifications((prev) =>
@@ -118,7 +119,9 @@ export default function NotificationsPage() {
     setNotifications([]);
   }, []);
 
-  const iconMap: Record<NotificationType, React.ReactNode> = {
+  /* ================= UI MAPS ================= */
+
+  const iconMap: Record<NotificationType, JSX.Element> = {
     success: <CheckCircle className="text-green-400" size={24} />,
     warning: <AlertTriangle className="text-yellow-400" size={24} />,
     info: <Info className="text-blue-400" size={24} />,
@@ -132,20 +135,17 @@ export default function NotificationsPage() {
     alert: "border-red-500/30 bg-red-500/10",
   };
 
+  /* ================= RENDER ================= */
+
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-[#0f172a] via-[#1e1b4b] to-[#0f172a]">
       <Sidebar role="victim" />
 
       <main className="flex-1 p-8 overflow-y-auto">
-        {/* Connection Status */}
-        <div className="mb-4 p-3 bg-white/5 border border-white/10 rounded-lg">
-          <span className={`inline-flex items-center gap-2 text-sm ${
-            connected ? 'text-green-400' : 'text-red-400'
-          }`}>
-            {connected ? '🟢 Connected' : '🔴 Disconnected'}
-          </span>
-          <span className="text-xs text-gray-500 ml-4">
-            Socket: {socketNotifications.length} | Local: {notifications.length}
+        {/* Connection */}
+        <div className="mb-4 text-sm">
+          <span className={connected ? "text-green-400" : "text-red-400"}>
+            {connected ? "🟢 Connected" : "🔴 Disconnected"}
           </span>
         </div>
 
@@ -163,91 +163,71 @@ export default function NotificationsPage() {
           {notifications.length > 0 && (
             <button
               onClick={clearAll}
-              className="px-4 py-2 bg-red-500/20 border border-red-500/40 text-red-400 rounded-lg font-semibold hover:bg-red-500/30 transition-all"
+              className="px-4 py-2 bg-red-500/20 text-red-400 rounded-lg"
             >
-              Clear All ({notifications.length})
+              Clear All
             </button>
           )}
         </div>
 
         {/* Filters */}
-        <div className="flex gap-2 mb-6 flex-wrap items-center">
+        <div className="flex gap-2 mb-6">
           {["all", "unread", "alert", "warning", "success", "info"].map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f as any)}
-              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
-                filter === f
-                  ? "bg-blue-500 text-white shadow-md"
-                  : "bg-white/5 text-gray-400 hover:bg-white/10"
+              className={`px-4 py-2 rounded-lg ${
+                filter === f ? "bg-blue-500 text-white" : "bg-white/5 text-gray-400"
               }`}
             >
-              {f === "unread" ? `Unread (${unreadCount})` : f.toUpperCase()}
+              {f.toUpperCase()}
             </button>
           ))}
           {unreadCount > 0 && (
             <button
               onClick={markAllAsRead}
-              className="ml-auto px-6 py-2 bg-white/10 border border-white/20 text-white rounded-lg hover:bg-white/20"
+              className="ml-auto px-4 py-2 bg-white/10 text-white rounded-lg"
             >
               Mark All Read
             </button>
           )}
         </div>
 
-        {/* Notifications List */}
+        {/* List */}
         {filteredNotifications.length === 0 ? (
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-12 text-center">
-            <BellOff size={64} className="text-gray-600 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-300 mb-2">No notifications</h3>
-            <p className="text-gray-500">
-              {connected ? "You're all caught up!" : "Connect to receive updates"}
-            </p>
+          <div className="text-center text-gray-400">
+            <BellOff size={48} className="mx-auto mb-4" />
+            No notifications
           </div>
         ) : (
           <div className="space-y-4">
             {filteredNotifications.map((n) => (
               <div
                 key={n.id}
-                className={`border rounded-2xl p-6 transition-all hover:shadow-xl ${
+                className={`border rounded-xl p-5 ${
                   n.read ? "opacity-70 border-white/10" : colorMap[n.type]
                 }`}
               >
                 <div className="flex gap-4">
                   {iconMap[n.type]}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-start">
-                      <h3 className="text-lg font-semibold text-white truncate">{n.title}</h3>
-                      <div className="flex gap-2 flex-shrink-0">
+                  <div className="flex-1">
+                    <div className="flex justify-between">
+                      <h3 className="text-white font-semibold">{n.title}</h3>
+                      <div className="flex gap-2">
                         {!n.read && (
-                          <button
-                            onClick={() => markAsRead(n.id)}
-                            className="p-1 hover:bg-white/10 rounded-full"
-                            title="Mark as read"
-                          >
-                            <CheckCircle size={16} className="text-green-400" />
+                          <button onClick={() => markAsRead(n.id)}>
+                            <CheckCircle size={16} />
                           </button>
                         )}
-                        <button
-                          onClick={() => deleteNotification(n.id)}
-                          className="p-1 hover:bg-red-500/20 rounded-full"
-                          title="Delete"
-                        >
+                        <button onClick={() => deleteNotification(n.id)}>
                           <Trash2 size={16} className="text-red-400" />
                         </button>
                       </div>
                     </div>
-                    <p className="text-gray-300 text-sm mt-1 line-clamp-2">{n.message}</p>
-                    <div className="flex justify-between mt-4 text-xs text-gray-500 items-center">
-                      <span className="flex gap-1 items-center">
-                        <Clock size={14} />
-                        {formatRelativeTime(n.timestamp)}
-                      </span>
-                      {n.actionable && !n.read && (
-                        <button className="px-4 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-xs font-semibold shadow-sm">
-                          View Details
-                        </button>
-                      )}
+                    <p className="text-gray-300 text-sm mt-1">{n.message}</p>
+                    <div className="text-xs text-gray-500 mt-2 flex gap-1 items-center">
+                      <Clock size={12} />
+                      {formatRelativeTime(n.timestamp)}
                     </div>
                   </div>
                 </div>

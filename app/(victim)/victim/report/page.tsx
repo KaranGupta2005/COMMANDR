@@ -30,8 +30,8 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-
+import { ToggleGroup } from "@radix-ui/react-toggle-group";
+import { ToggleGroupItem } from "@/components/ui/toggle-group";
 import Link from "next/link";
 
 /* ---------- TYPES (UI ONLY) ---------- */
@@ -50,12 +50,7 @@ interface ReportFormData {
 const emergencyTypes = [
   { id: "flood", label: "Flood", icon: Droplets, color: "text-blue-400" },
   { id: "fire", label: "Fire", icon: Flame, color: "text-orange-400" },
-  {
-    id: "trapped",
-    label: "Trapped",
-    icon: PersonStanding,
-    color: "text-yellow-400",
-  },
+  { id: "trapped", label: "Trapped", icon: PersonStanding, color: "text-yellow-400" },
   { id: "medical", label: "Medical", icon: Stethoscope, color: "text-red-400" },
   { id: "other", label: "Other", icon: AlertTriangle, color: "text-gray-300" },
 ];
@@ -97,7 +92,7 @@ export default function VictimReportPage() {
         setError("Failed to get location. Please enable location services.");
         setIsLocating(false);
       },
-      { timeout: 8000 },
+      { timeout: 8000 }
     );
   };
 

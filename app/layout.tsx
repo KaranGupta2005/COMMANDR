@@ -5,6 +5,9 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Providers from "@/app/providers/Providers";
+import { Toaster } from "@/components/ui/toaster";
+import SocketToaster from "@/components/SocketToaster";
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,7 +40,9 @@ export default function RootLayout({
             <Navbar />
 
             <main className="flex-1 mt-24">
+              <SocketToaster />
               {children}
+              
             </main>
 
             <Footer />
