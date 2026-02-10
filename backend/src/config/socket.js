@@ -18,14 +18,13 @@ export const initSocket = (httpServer) => {
     transports: ["websocket", "polling"],
   });
 
-  /* ================= AUTH MIDDLEWARE ================= */
-
+  // auth middleware
   io.use((socket, next) => {
     try {
       const cookieHeader = socket.handshake.headers.cookie;
 
       if (!cookieHeader) {
-        // ❌ DO NOT BLOCK POLLING
+        // don't allow websockets , and not block polling
         return next();
       }
 
@@ -42,12 +41,11 @@ export const initSocket = (httpServer) => {
       next();
     } catch (err) {
       console.error("Socket auth error:", err.message);
-      next(); // ❗ DO NOT BLOCK CONNECTION
+      next(); // do not block connection
     }
   });
 
-  /* ================= CONNECTION ================= */
-
+  // connection handler
   io.on("connection", (socket) => {
     console.log("🟢 Socket connected:", socket.id);
 
