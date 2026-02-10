@@ -1,7 +1,7 @@
-import User from "../models/User.js"; // ✅ import
+import User from "../models/User.js"; // import
 
 export default (io, socket) => {
-  // ✅ export default
+  // export default
   socket.on("locationUpdate", async ({ lat, lng, role }) => {
     if (lat == null || lng == null) return;
 
@@ -23,7 +23,7 @@ export default (io, socket) => {
     }
 
     if (role === "rescue") {
-      // ✅ ALSO emit to other rescues for nearby teams
+      // emit to other rescues for nearby teams
       io.to("rescue").emit("rescueLocation", {
         userId: socket.userId,
         lat,

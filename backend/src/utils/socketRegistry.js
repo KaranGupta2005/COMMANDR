@@ -16,7 +16,6 @@ export const removeUser = (userId) => {
   onlineUsers.delete(String(userId));
 };
 
-
 export const getSocketId = (userId) => {
   return onlineUsers.get(String(userId));
 };
