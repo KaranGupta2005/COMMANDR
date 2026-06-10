@@ -93,7 +93,7 @@ export const createMissionSchema = Joi.object({
   }),
 }).options({
   abortEarly: false,
-  allowUnknown: false,
+  allowUnknown: false, // prevents extra fields other than the ones defined in Schema
 });
 
 export const createSafeZoneSchema = Joi.object({
