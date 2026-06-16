@@ -2,6 +2,7 @@ import Emergency from "../models/Emergency.js";
 import ExpressError from "../middlewares/expressError.js";
 import { decisionEngine } from "../engine/decisionEngine.js";
 import { EVENTS } from "../constants/events.js";
+import { sendContextFromEmergency } from "./mlFeedbackService.js";
 
 export const createEmergency = async (userId, data, io) => {
   const emergency = await Emergency.create({
@@ -29,6 +30,9 @@ export const createEmergency = async (userId, data, io) => {
     context: { userId },
     io,
   });
+
+  // Feed live context to ML route optimizer
+  sendContextFromEmergency(emergency).catch(() => {});
 
   return emergency;
 };

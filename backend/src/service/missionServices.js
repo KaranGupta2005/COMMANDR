@@ -4,6 +4,7 @@ import Vehicle from "../models/Vehicle.js";
 import ExpressError from "../middlewares/expressError.js";
 import { decisionEngine } from "../engine/decisionEngine.js";
 import { EVENTS } from "../constants/events.js";
+import { sendRouteFeedback } from "./mlFeedbackService.js";
 
 export const createMission = async (data, io) => {
   const emergency = await Emergency.findById(data.emergencyId);
@@ -83,6 +84,8 @@ export const updateMissionStatus = async (missionId, status, io) => {
   if (status === "completed") {
     mission.completedAt = new Date();
 
+    const emergency = await Emergency.findById(mission.emergencyId);
+
     await Emergency.findByIdAndUpdate(mission.emergencyId, {
       status: "resolved",
     });
@@ -101,6 +104,9 @@ export const updateMissionStatus = async (missionId, status, io) => {
       },
       io,
     });
+
+    // Send feedback to ML service for model improvement
+    sendRouteFeedback(mission, emergency).catch(() => {});
   }
 
   if (status === "rejected") {

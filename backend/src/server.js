@@ -19,6 +19,7 @@ import subsRoutes from "./routes/subsRouter.js";
 import routesRoutes from "./routes/routesRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import rescueRoutes from "./routes/rescueRoutes.js";
+import mlRoutes from "./routes/mlRoutes.js";
 
 dotenv.config();
 
@@ -58,6 +59,7 @@ app.use("/api/subscriptions", subsRoutes);
 app.use("/api/routes", routesRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/rescue", rescueRoutes);
+app.use("/api/ml", mlRoutes);
 
 // 404 handler
 app.use((req, res) => {
