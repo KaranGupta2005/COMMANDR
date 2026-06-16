@@ -9,9 +9,13 @@ import rescueChatHandler from "../socket/rescueChatHandler.js";
 import routeHandler from "../socket/routeHandler.js";
 
 export const initSocket = (httpServer) => {
+  const allowedOrigins = (process.env.CLIENT_ORIGIN || "http://localhost:3000")
+    .split(",")
+    .map((o) => o.trim());
+
   const io = new Server(httpServer, {
     cors: {
-      origin: process.env.CLIENT_ORIGIN || "http://localhost:3000",
+      origin: allowedOrigins,
       credentials: true,
       methods: ["GET", "POST"],
     },

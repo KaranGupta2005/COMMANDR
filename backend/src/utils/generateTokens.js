@@ -12,26 +12,25 @@ export const generateRefreshToken = (userId) => {
   });
 };
 
-export const setAuthTokens=(res,accessToken,refreshToken)=>{
-    const accessOptions={
-        httpOnly:true,
-        sameSite:'Strict',
-        maxAge:15*60*1000, //15 mins 
-        path:'/'
-    };
+export const setAuthTokens = (res, accessToken, refreshToken) => {
+  const isProduction = process.env.NODE_ENV === "production";
 
-    const refreshOptions={
-        httpOnly:true,
-        sameSite:'Strict',
-        maxAge:7*24*60*60*1000, //7 days
-        path:'/'
-    };
+  const accessOptions = {
+    httpOnly: true,
+    sameSite: isProduction ? "None" : "Strict",
+    secure: isProduction,
+    maxAge: 15 * 60 * 1000, // 15 mins
+    path: "/",
+  };
 
-    if(process.env.NODE_ENV==='production'){
-        accessOptions.secure=true;
-        refreshOptions.secure=true;
-    }
+  const refreshOptions = {
+    httpOnly: true,
+    sameSite: isProduction ? "None" : "Strict",
+    secure: isProduction,
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    path: "/",
+  };
 
-    res.cookie('accessToken',accessToken,accessOptions);
-    res.cookie('refreshToken',refreshToken,refreshOptions);
+  res.cookie("accessToken", accessToken, accessOptions);
+  res.cookie("refreshToken", refreshToken, refreshOptions);
 };

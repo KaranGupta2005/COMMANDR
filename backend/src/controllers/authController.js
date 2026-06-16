@@ -103,14 +103,14 @@ export const logout = async (req, res) => {
 
   res.clearCookie("accessToken", {
     httpOnly: true,
-    sameSite: "Strict",
+    sameSite: process.env.NODE_ENV === "production" ? "None" : "Strict",
     secure: process.env.NODE_ENV === "production",
     path: "/",
   });
 
   res.clearCookie("refreshToken", {
     httpOnly: true,
-    sameSite: "Strict",
+    sameSite: process.env.NODE_ENV === "production" ? "None" : "Strict",
     secure: process.env.NODE_ENV === "production",
     path: "/",
   });
