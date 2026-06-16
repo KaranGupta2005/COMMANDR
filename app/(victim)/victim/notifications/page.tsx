@@ -121,7 +121,7 @@ export default function NotificationsPage() {
 
   /* ================= UI MAPS ================= */
 
-  const iconMap: Record<NotificationType, JSX.Element> = {
+  const iconMap: Record<NotificationType, React.ReactNode> = {
     success: <CheckCircle className="text-green-400" size={24} />,
     warning: <AlertTriangle className="text-yellow-400" size={24} />,
     info: <Info className="text-blue-400" size={24} />,

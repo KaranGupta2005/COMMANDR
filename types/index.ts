@@ -2,8 +2,10 @@
 export type UserRole = "victim" | "rescue" | "logistics";
 
 export interface User {
+  _id?: string;
   id: string;
   fullName: string;
+  name?: string;
   email: string;
   role: UserRole;
   lastKnownLocation?: {

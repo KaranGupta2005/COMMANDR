@@ -47,7 +47,7 @@ export default function ResourceAllocationPage() {
 
   // ---------- STATE ----------
   const [selectedEmergency, setSelectedEmergency] = useState<Emergency | null>(null);
-  const [selectedRescueTeam, setSelectedRescueTeam] = useState<User | null>(null);
+  const [selectedRescueTeam, setSelectedRescueTeam] = useState<any | null>(null);
   const [selectedVehicles, setSelectedVehicles] = useState<string[]>([]);
   const [eta, setEta] = useState("");
   const [isDispatching, setIsDispatching] = useState(false);
@@ -86,7 +86,7 @@ export default function ResourceAllocationPage() {
       // ✅ BACKEND-SAFE PAYLOAD (exact match to your service)
       const payload = {
         emergencyId: selectedEmergency._id.toString(),
-        rescueTeamId: selectedRescueTeam._id.toString(),
+        rescueTeamId: (selectedRescueTeam._id || selectedRescueTeam.id).toString(),
         vehiclesAssigned: selectedVehicles.map(id => id.toString()),
         eta: eta || undefined
       };
@@ -395,8 +395,8 @@ function SelectablePanel<T extends { _id: string }>({
   );
 }
 
-function MetricCard({ icon, label, value, color }: any) {
-  const styles = {
+function MetricCard({ icon, label, value, color }: { icon: React.ReactNode; label: string; value: number | string; color: "green" | "amber" | "red" }) {
+  const styles: Record<string, string> = {
     green: "from-emerald-500/20 to-green-600/20 border-emerald-500/40",
     amber: "from-amber-500/20 to-orange-600/20 border-amber-500/40",
     red: "from-red-500/20 to-rose-600/20 border-red-500/40",

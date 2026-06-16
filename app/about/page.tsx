@@ -24,7 +24,7 @@ const features = [
   },
 ];
 
-const FeatureCard = ({ title, description, index, accent }) => (
+const FeatureCard = ({ title, description, index, accent }: { title: string; description: string; index: number; accent: string }) => (
   <motion.div
     className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 flex-1 min-w-[280px]
                shadow-xl border border-white/10 hover:scale-[1.03] transition-transform duration-300"

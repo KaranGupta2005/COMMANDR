@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import Sidebar from "@/components/Sidebar";
@@ -34,6 +34,14 @@ const Polyline = dynamic(
 );
 
 export default function MapRoutePage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-slate-950 flex items-center justify-center"><p className="text-white">Loading...</p></div>}>
+      <MapRouteContent />
+    </Suspense>
+  );
+}
+
+function MapRouteContent() {
   const searchParams = useSearchParams();
   const [mounted, setMounted] = useState(false);
 

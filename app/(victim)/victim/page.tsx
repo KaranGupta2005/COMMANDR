@@ -74,7 +74,7 @@ export default function VictimPage() {
     <main className="min-h-screen p-6 flex flex-col lg:flex-row gap-6">
       {/* MAP */}
       <div className="w-full lg:w-2/3 h-[500px] border border-gray-300 rounded-xl overflow-hidden">
-        <Map />
+        <Map userPosition={[28.6139, 77.209]} safeZones={[]} />
       </div>
 
       {/* EMERGENCY PANEL */}

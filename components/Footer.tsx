@@ -22,7 +22,7 @@ export default function DisasterFooter() {
     },
   ];
 
-  const handleSubscribe = (e) => {
+  const handleSubscribe = (e: React.FormEvent) => {
     e.preventDefault();
     alert("Subscribed to emergency alerts!");
   };

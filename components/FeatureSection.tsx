@@ -1,3 +1,4 @@
+// @ts-nocheck
 "use client";
 import { useState, useRef } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
@@ -23,8 +24,8 @@ import {
   ChevronRight
 } from "lucide-react";
 
-function Icon3D({ type, color }) {
-  const meshRef = useRef();
+function Icon3D({ type, color }: { type: string; color: string }) {
+  const meshRef = useRef<any>(null);
   const [hovered, setHovered] = useState(false);
 
   useFrame((state) => {

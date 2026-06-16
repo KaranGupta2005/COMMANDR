@@ -19,7 +19,7 @@ function PolicyItem({ title, description, isNational }: PolicyCardProps) {
   return (
     <div className="bg-white/5 hover:bg-white/10 border border-white/10 hover:border-purple-500/30 rounded-xl p-4 transition-all">
       <div className="flex items-start gap-3">
-        <FileText className={isNational ? "text-purple-400" : "text-blue-400"} size={20} className="mt-1 flex-shrink-0" />
+        <FileText className={`${isNational ? "text-purple-400" : "text-blue-400"} mt-1 flex-shrink-0`} size={20} />
         <div className="flex-1">
           <h4 className="text-white font-semibold text-sm mb-1">{title}</h4>
           {description && (

@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/table";
 
 import { Button } from "@/components/ui/button";
-import { Select } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 
 import { useVehicles } from "@/hooks/useVehicles";
