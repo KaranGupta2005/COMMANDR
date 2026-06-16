@@ -8,6 +8,11 @@ const apiClient = axios.create({
   },
 });
 
+// Debug: log which API URL is being used (remove after confirming)
+if (typeof window !== "undefined") {
+  console.log("[COMMANDR] API URL:", process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api (FALLBACK)");
+}
+
 // Response interceptor — auto refresh token on 401
 let isRefreshing = false;
 let failedQueue: Array<{
