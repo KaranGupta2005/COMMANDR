@@ -1,8 +1,7 @@
 import User from "../models/User.js";
 
-const DISTANCE_LIMIT_KM = 5; 
+const DISTANCE_LIMIT_KM = 5;
 
-//Haversine formula
 function getDistanceKm(lat1, lon1, lat2, lon2) {
   const R = 6371;
   const toRad = (deg) => (deg * Math.PI) / 180;
@@ -21,16 +20,16 @@ function getDistanceKm(lat1, lon1, lat2, lon2) {
 
 export default function rescueChatHandler(io, socket) {
   socket.on("rescue:join-nearby", async ({ lat, lng }) => {
-    if (socket.role !== "rescue") return;
+    if (!socket.userId || socket.role !== "rescue") return;
     if (lat == null || lng == null) return;
 
     const allRescueUsers = await User.find({
       role: "rescue",
-      "lastKnownLocation.lat": { $exists: true },
-      "lastKnownLocation.lng": { $exists: true },
+      "lastKnownLocation.lat": { $ne: null },
+      "lastKnownLocation.lng": { $ne: null },
     });
 
-    const nearbyIds = [];
+    const nearbyIds = [socket.userId];
 
     for (const user of allRescueUsers) {
       if (!user.lastKnownLocation) continue;
@@ -48,7 +47,7 @@ export default function rescueChatHandler(io, socket) {
       }
     }
 
-    if (!nearbyIds.length) return;
+    if (nearbyIds.length < 2) return; // No other nearby users
 
     const roomId = `nearby-rescue:${nearbyIds.sort().join("-")}`;
 
@@ -60,16 +59,17 @@ export default function rescueChatHandler(io, socket) {
     socket.join(roomId);
     socket.currentRescueRoom = roomId;
 
-    socket.emit("rescue:joined-room", { roomId });
+    socket.emit("rescue:joined-room", { roomId, nearbyCount: nearbyIds.length - 1 });
   });
 
   socket.on("rescue:send-message", ({ message }) => {
-    if (!socket.currentRescueRoom || !message) return;
+    if (!socket.userId || !socket.currentRescueRoom) return;
+    if (!message || typeof message !== "string" || !message.trim()) return;
 
     io.to(socket.currentRescueRoom).emit("rescue:new-message", {
       senderId: socket.userId,
-      message,
+      message: message.trim().slice(0, 1000), // Limit message length
       timestamp: new Date(),
     });
-  }); 
-};
+  });
+}

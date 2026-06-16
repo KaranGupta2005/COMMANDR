@@ -1,4 +1,5 @@
 import SafeZone from "../models/SafeZone.js";
+import ExpressError from "../middlewares/expressError.js";
 import { decisionEngine } from "../engine/decisionEngine.js";
 import { EVENTS } from "../constants/events.js";
 
@@ -36,7 +37,7 @@ export const getSafeZoneById = async (req, res) => {
   );
 
   if (!zone) {
-    throw new Error("Safe Zone not found");
+    throw new ExpressError(404, "Safe Zone not found");
   }
 
   res.status(200).json({
@@ -48,7 +49,7 @@ export const getSafeZoneById = async (req, res) => {
 export const updateSafeZone = async (req, res) => {
   let zone = await SafeZone.findById(req.params.id);
   if (!zone) {
-    throw new Error("Safe Zone not found");
+    throw new ExpressError(404, "Safe Zone not found");
   }
 
   const updates = {
@@ -56,12 +57,11 @@ export const updateSafeZone = async (req, res) => {
     lastUpdatedBy: req.user._id,
   };
 
-  if (
-    updates.currentOccupancy !== undefined &&
-    updates.capacity !== undefined &&
-    updates.currentOccupancy > updates.capacity
-  ) {
-    throw new Error("Occupancy cannot exceed capacity");
+  const newCapacity = updates.capacity ?? zone.capacity;
+  const newOccupancy = updates.currentOccupancy ?? zone.currentOccupancy;
+
+  if (newOccupancy > newCapacity) {
+    throw new ExpressError(400, "Occupancy cannot exceed capacity");
   }
 
   zone = await SafeZone.findByIdAndUpdate(req.params.id, updates, {
@@ -69,6 +69,7 @@ export const updateSafeZone = async (req, res) => {
     runValidators: true,
   });
 
+  // Auto-escalate if capacity reached
   if (zone.currentOccupancy >= zone.capacity && zone.status !== "unsafe") {
     zone.status = "unsafe";
     await zone.save();
@@ -93,7 +94,7 @@ export const updateSafeZone = async (req, res) => {
 export const deleteSafeZone = async (req, res) => {
   const zone = await SafeZone.findById(req.params.id);
   if (!zone) {
-    throw new Error("Safe Zone not found");
+    throw new ExpressError(404, "Safe Zone not found");
   }
 
   await zone.deleteOne();

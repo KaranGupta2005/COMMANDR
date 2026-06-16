@@ -2,9 +2,11 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { UserRole } from "@/lib/types";
+import { useAuth } from "@/app/providers/AuthProvider";
 
-export default function RoleGaurd({
+type UserRole = "victim" | "rescue" | "logistics";
+
+export default function RoleGuard({
   allowedRole,
   children,
 }: {
@@ -12,21 +14,25 @@ export default function RoleGaurd({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const [isAuthorized, setIsAuthorized] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user, loading } = useAuth();
+  const [authorized, setAuthorized] = useState(false);
 
   useEffect(() => {
-    const role = localStorage.getItem("userRole");
+    if (loading) return;
 
-    if (role === allowedRole) {
-      setIsAuthorized(true);
+    if (!user) {
+      router.replace("/auth/login");
+      return;
+    }
+
+    if (user.role === allowedRole) {
+      setAuthorized(true);
     } else {
       router.replace("/");
     }
-    setIsLoading(false);
-  }, [allowedRole, router]);
+  }, [user, loading, allowedRole, router]);
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-950">
         <div className="text-white text-lg">Loading...</div>
@@ -34,9 +40,7 @@ export default function RoleGaurd({
     );
   }
 
-  if (!isAuthorized) {
-    return null;
-  }
+  if (!authorized) return null;
 
   return <>{children}</>;
 }

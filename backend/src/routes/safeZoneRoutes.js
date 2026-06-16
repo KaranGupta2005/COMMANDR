@@ -9,6 +9,7 @@ import {
 
 import { userAuth, authorize } from "../middlewares/authMiddleware.js";
 import { wrapAsync } from "../middlewares/wrapAsync.js";
+import { validateCreateSafeZone } from "../middlewares/validate.js";
 
 const router = express.Router();
 
@@ -24,6 +25,7 @@ router.post(
     "/",
     userAuth,
     authorize(["logistics"]),
+    validateCreateSafeZone,
     wrapAsync(createSafeZone)
 );
 

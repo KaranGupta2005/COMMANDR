@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
-import authApi from "../../(api)/authApi/page";
+import { useAuth } from "@/app/providers/AuthProvider";
 
 export default function SignupPage() {
   const router = useRouter();
+  const { signup } = useAuth();
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -19,26 +20,34 @@ export default function SignupPage() {
   const [error, setError] = useState("");
   const [focusedField, setFocusedField] = useState("");
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    if (!formData.role) {
+      setError("Please select a role");
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const res = await authApi.post("/signup", formData);
-      const role = res.data.user.role;
-
-      if (role === "victim") router.push("/victim/report");
-      else if (role === "rescue") router.push("/rescue/dashboard");
-      else if (role === "logistics") router.push("/logistics/dashboard");
-      else router.push("/dashboard");
-    } catch (err) {
+      await signup({
+        fullName: formData.fullName,
+        email: formData.email,
+        password: formData.password,
+        role: formData.role as "victim" | "rescue" | "logistics",
+      });
+      // AuthProvider handles redirect based on role
+    } catch (err: any) {
       setError(
-        err.response?.data?.message || "Signup failed. Please try again."
+        err.response?.data?.message ||
+          err.message ||
+          "Signup failed. Please try again."
       );
     } finally {
       setLoading(false);
@@ -68,14 +77,14 @@ export default function SignupPage() {
           {[
             { name: "fullName", type: "text", placeholder: "Full Name" },
             { name: "email", type: "email", placeholder: "Email Address" },
-            { name: "password", type: "password", placeholder: "Password" },
+            { name: "password", type: "password", placeholder: "Password (min 6 chars)" },
           ].map((input) => (
             <input
               key={input.name}
               type={input.type}
               name={input.name}
               placeholder={input.placeholder}
-              value={formData[input.name]}
+              value={formData[input.name as keyof typeof formData]}
               onChange={handleChange}
               onFocus={() => setFocusedField(input.name)}
               onBlur={() => setFocusedField("")}

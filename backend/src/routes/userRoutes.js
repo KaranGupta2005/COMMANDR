@@ -1,26 +1,31 @@
 import express from "express";
 import User from "../models/User.js";
-import { userAuth , authorize } from "../middlewares/authMiddleware.js";   
+import { userAuth } from "../middlewares/authMiddleware.js";
+import { wrapAsync } from "../middlewares/wrapAsync.js";
 
 const router = express.Router();
 
-router.get("/", userAuth, authorize(["logistics", "rescue" , 'victim']), async (req, res) => {
-  try {
+router.get(
+  "/",
+  userAuth,
+  wrapAsync(async (req, res) => {
     const { role } = req.query;
 
-    const filter = role ? { role } : {};
-    const users = await User.find(filter).select("-password");
+    const filter = {};
+    if (role && ["victim", "rescue", "logistics"].includes(role)) {
+      filter.role = role;
+    }
+
+    const users = await User.find(filter).select(
+      "fullName email role lastKnownLocation createdAt"
+    );
 
     res.status(200).json({
       success: true,
+      count: users.length,
       data: users,
     });
-  } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: "Failed to fetch users",
-    });
-  }
-});
+  })
+);
 
 export default router;

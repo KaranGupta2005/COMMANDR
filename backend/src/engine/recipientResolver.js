@@ -11,28 +11,34 @@ export const resolveRecipients = async (eventType, payload) => {
     case EVENTS.EMERGENCY_ESCALATED: {
       const users = await User.find({
         role: { $in: ["rescue", "logistics"] },
-        lastKnownLocation: { $exists: true },
+        "lastKnownLocation.lat": { $ne: null },
+        "lastKnownLocation.lng": { $ne: null },
       });
 
       for (const user of users) {
+        // Logistics always gets notified
         if (user.role === "logistics") {
           recipients.push(user);
           continue;
         }
 
-        const distance = getDistanceKm(
-          user.lastKnownLocation,
-          payload.location,
-        );
-        if (distance <= 10) {
-          recipients.push(user);
+        // Rescue only if within 10km
+        if (payload?.location) {
+          const distance = getDistanceKm(
+            user.lastKnownLocation,
+            payload.location
+          );
+          if (distance <= 10) {
+            recipients.push(user);
+          }
         }
       }
-      if (payload.reportedBy) {
+
+      // Also notify the reporter
+      if (payload?.reportedBy) {
         const victim = await User.findById(payload.reportedBy);
         if (victim) recipients.push(victim);
       }
-
       break;
     }
 
@@ -41,16 +47,13 @@ export const resolveRecipients = async (eventType, payload) => {
     case EVENTS.MISSION_REJECTED:
     case EVENTS.MISSION_DELAYED:
     case EVENTS.MISSION_COMPLETED: {
-      const user = await User.findById(payload.rescueId);
-      if (user) {
-        recipients.push(user);
+      if (payload?.rescueId) {
+        const user = await User.findById(payload.rescueId);
+        if (user) recipients.push(user);
       }
 
-      const logistics = await User.find({
-        role: "logistics",
-      });
+      const logistics = await User.find({ role: "logistics" });
       recipients.push(...logistics);
-
       break;
     }
 
@@ -59,11 +62,9 @@ export const resolveRecipients = async (eventType, payload) => {
       const logistics = await User.find({ role: "logistics" });
       recipients.push(...logistics);
 
-      if (payload.rescueId) {
+      if (payload?.rescueId) {
         const rescue = await User.findById(payload.rescueId);
-        if (rescue) {
-          recipients.push(rescue);
-        }
+        if (rescue) recipients.push(rescue);
       }
       break;
     }
@@ -73,15 +74,19 @@ export const resolveRecipients = async (eventType, payload) => {
       recipients.push(...users);
       break;
     }
+
+    default:
+      console.warn("Unknown event type in recipientResolver:", eventType);
   }
 
-  console.log(
-    "🎯 recipients:",
-    recipients.map((u) => ({
-      id: u._id.toString(),
-      role: u.role,
-    })),
-  );
+  // Deduplicate by user ID
+  const seen = new Set();
+  const unique = recipients.filter((user) => {
+    const id = user._id.toString();
+    if (seen.has(id)) return false;
+    seen.add(id);
+    return true;
+  });
 
-  return recipients;
+  return unique;
 };

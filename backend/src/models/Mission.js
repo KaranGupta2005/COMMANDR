@@ -11,7 +11,7 @@ const missionSchema = new mongoose.Schema(
 
     rescueTeamId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Team",
+      ref: "User",
       required: true,
     },
 
@@ -28,7 +28,7 @@ const missionSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["pending", "enroute", "active", "completed", "cancelled"],
+      enum: ["pending", "enroute", "active", "completed", "cancelled", "rejected", "delayed"],
       default: "pending",
       index: true,
     },

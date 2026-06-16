@@ -3,32 +3,31 @@ import {
   Vehicle,
   CreateVehicleData,
   UpdateVehicleData,
-  ApiResponse,
 } from "@/types";
 
 export const vehicleApi = {
   // Create vehicle
   create: async (data: CreateVehicleData): Promise<Vehicle> => {
     const response = await apiClient.post("/vehicles/new", data);
-    return response.data;
+    return response.data.data;
   },
 
   // Get all vehicles
   getAll: async (): Promise<Vehicle[]> => {
     const response = await apiClient.get("/vehicles");
-    return response.data;
+    return response.data.data;
   },
 
   // Get vehicle by ID
   getById: async (id: string): Promise<Vehicle> => {
     const response = await apiClient.get(`/vehicles/${id}`);
-    return response.data;
+    return response.data.data;
   },
 
   // Update vehicle
   update: async (id: string, data: UpdateVehicleData): Promise<Vehicle> => {
     const response = await apiClient.patch(`/vehicles/${id}`, data);
-    return response.data;
+    return response.data.data;
   },
 
   // Delete vehicle
@@ -39,20 +38,17 @@ export const vehicleApi = {
   // Get available vehicles
   getAvailable: async (): Promise<Vehicle[]> => {
     const response = await apiClient.get("/vehicles");
-    const vehicles = response.data;
+    const vehicles = response.data.data;
     return vehicles.filter((v: Vehicle) => v.status === "available");
   },
 
   // Allocate vehicle to mission
-  allocate: async (
-    vehicleId: string,
-    missionId: string
-  ): Promise<Vehicle> => {
+  allocate: async (vehicleId: string, missionId: string): Promise<Vehicle> => {
     const response = await apiClient.patch(`/vehicles/${vehicleId}`, {
       status: "in-use",
       assignedMissionId: missionId,
     });
-    return response.data;
+    return response.data.data;
   },
 
   // Mark vehicle as down
@@ -60,7 +56,7 @@ export const vehicleApi = {
     const response = await apiClient.patch(`/vehicles/${vehicleId}`, {
       status: "down",
     });
-    return response.data;
+    return response.data.data;
   },
 };
 

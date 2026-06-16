@@ -1,3 +1,5 @@
+export type UserRole = "victim" | "rescue" | "logistics";
+
 export interface ContactNumber {
   label: string;
   number: string;

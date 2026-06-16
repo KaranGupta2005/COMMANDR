@@ -23,25 +23,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   /* ========== RESTORE SESSION ========== */
   useEffect(() => {
+    let mounted = true;
+
     authApi
       .me()
       .then((res) => {
+        if (!mounted) return;
         setUser(res.user);
-        socket.connect(); // ✅ CONNECT ONLY HERE
+        socket.connect();
       })
       .catch(() => {
+        // Not logged in — that's fine, no redirect needed
+        if (!mounted) return;
         setUser(null);
-        socket.disconnect(); // safety
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (mounted) setLoading(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   /* ========== LOGIN ========== */
   const login = async (credentials: LoginCredentials) => {
     const res = await authApi.login(credentials);
     setUser(res.user);
-
-    socket.connect(); // ✅ CONNECT ON LOGIN
+    socket.connect();
     router.replace(`/${res.user.role}/dashboard`);
   };
 
@@ -49,17 +58,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signup = async (data: SignupData) => {
     const res = await authApi.signup(data);
     setUser(res.user);
-
-    socket.connect(); // ✅ CONNECT ON SIGNUP
+    socket.connect();
     router.replace(`/${res.user.role}/dashboard`);
   };
 
   /* ========== LOGOUT ========== */
   const logout = async () => {
-    await authApi.logout();
+    try {
+      await authApi.logout();
+    } catch {
+      // Logout may fail if token already expired — still clear local state
+    }
     setUser(null);
-
-    socket.disconnect(); // ✅ DISCONNECT ONLY HERE
+    socket.disconnect();
     router.replace("/auth/login");
   };
 

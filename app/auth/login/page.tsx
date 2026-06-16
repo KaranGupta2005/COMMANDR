@@ -1,13 +1,13 @@
 "use client";
 
-import { socket } from "@/lib/socket";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
-import authApi from "@/app/(api)/authApi/page";
+import { useAuth } from "@/app/providers/AuthProvider";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login } = useAuth();
 
   const [formData, setFormData] = useState({
     email: "",
@@ -28,16 +28,12 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const res = await authApi.post("/login", formData);
-      const role = res.data.user.role;
-      
-      if (role === "victim") router.push("/victim/status");
-      else if (role === "rescue") router.push("/rescue/dashboard");
-      else if (role === "logistics") router.push("/logistics/dashboard");
-      else router.push("/dashboard");
+      await login(formData);
+      // AuthProvider handles redirect based on role
     } catch (err: any) {
       setError(
         err.response?.data?.message ||
+          err.message ||
           "Login failed. Please check your credentials."
       );
     } finally {
@@ -86,17 +82,6 @@ export default function LoginPage() {
               }`}
             />
           ))}
-
-          {/* FORGOT PASSWORD */}
-          <div className="text-right">
-            <button
-              type="button"
-              onClick={() => router.push("/auth/forgot-password")}
-              className="text-xs text-[#9ca3af] hover:text-[#38bdf8] transition"
-            >
-              Forgot password?
-            </button>
-          </div>
 
           {/* SUBMIT */}
           <motion.button

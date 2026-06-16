@@ -1,10 +1,18 @@
-import axios from "axios";
-import { useEffect, useState } from "react";
+"use client";
 
-const useFetch = (url, options = {}) => {
-  const [data, setData] = useState(null);
+import { useEffect, useState } from "react";
+import apiClient from "@/lib/api/client";
+
+interface UseFetchResult<T> {
+  data: T | null;
+  loading: boolean;
+  error: string | null;
+}
+
+const useFetch = <T = any>(url: string): UseFetchResult<T> => {
+  const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -14,18 +22,17 @@ const useFetch = (url, options = {}) => {
         setLoading(true);
         setError(null);
 
-        const res = await axios.get(url, {
-          ...options,
+        const res = await apiClient.get(url, {
           signal: controller.signal,
         });
 
         setData(res.data);
-      } catch (err) {
+      } catch (err: any) {
         if (err.name !== "CanceledError") {
           setError(
             err.response?.data?.message ||
               err.message ||
-              "Some error occurred. Please try again."
+              "Something went wrong"
           );
         }
       } finally {

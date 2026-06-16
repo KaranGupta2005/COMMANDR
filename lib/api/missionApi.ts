@@ -22,7 +22,7 @@ export const missionApi = {
     const response = await apiClient.patch(`/missions/${missionId}/status`, {
       status,
     });
-    return response.data.mission;
+    return response.data.data || response.data.mission;
   },
 
   // Get single mission

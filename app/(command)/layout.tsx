@@ -1,5 +1,6 @@
-import RoleGaurd from "@/components/RollGaurd";
-import { UserRole } from "@/lib/types";
+"use client";
+
+import RoleGuard from "@/components/RollGaurd";
 
 export default function CommandLayout({
   children,
@@ -7,7 +8,7 @@ export default function CommandLayout({
   children: React.ReactNode;
 }) {
   return (
-    <RoleGaurd allowedRole={UserRole.commander}>
+    <RoleGuard allowedRole="logistics">
       <div className="relative min-h-screen bg-white">
         <div
           className="absolute inset-0 h-full w-full 
@@ -16,6 +17,6 @@ export default function CommandLayout({
         />
         <div className="relative z-10">{children}</div>
       </div>
-    </RoleGaurd>
+    </RoleGuard>
   );
 }

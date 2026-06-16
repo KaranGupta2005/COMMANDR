@@ -30,6 +30,6 @@ export const changeEmergencyStatus = async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 
-  const updated = await updateEmergencyStatus(id, status);
+  const updated = await updateEmergencyStatus(id, status, req.app.get("io"));
   res.status(200).json({ message: "Emergency status updated", updated });
 };

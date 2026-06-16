@@ -5,34 +5,17 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Menu, X, ChevronDown } from "lucide-react";
-import authApi from "../app/(api)/authApi/page";
+import { useAuth } from "@/app/providers/AuthProvider";
 
 export default function DisasterNavbar() {
   const router = useRouter();
+  const { user, loading, logout } = useAuth();
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState<any>(null);
 
-  /* ================= AUTH CHECK ================= */
-  const checkAuth = async () => {
-    try {
-      const res = await authApi.get("/me");
-      setIsAuthenticated(true);
-      setUser(res.data.user);
-    } catch {
-      setIsAuthenticated(false);
-      setUser(null);
-    }
-  };
-
-  useEffect(() => {
-    checkAuth();
-    window.addEventListener("authChange", checkAuth);
-    return () => window.removeEventListener("authChange", checkAuth);
-  }, []);
+  const isAuthenticated = !!user;
 
   /* ================= SCROLL EFFECT ================= */
   useEffect(() => {
@@ -52,18 +35,16 @@ export default function DisasterNavbar() {
     if (role === "victim") router.push("/victim/dashboard");
     else if (role === "rescue") router.push("/rescue/dashboard");
     else if (role === "logistics") router.push("/logistics/dashboard");
-    else router.push("/dashboard");
+    else router.push("/");
   };
 
   /* ================= LOGOUT ================= */
   const handleLogout = async () => {
     try {
-      await authApi.post("/logout");
-    } catch {}
-    setIsAuthenticated(false);
-    setUser(null);
-    window.dispatchEvent(new Event("authChange"));
-    router.push("/auth/login");
+      await logout();
+    } catch {
+      router.push("/auth/login");
+    }
   };
 
   /* ================= STYLES ================= */
@@ -72,6 +53,8 @@ export default function DisasterNavbar() {
 
   const criticalLink =
     "px-4 py-2 text-red-400 hover:text-red-300 font-semibold transition-all duration-200 text-lg";
+
+  if (loading) return null;
 
   return (
     <nav

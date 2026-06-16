@@ -4,7 +4,7 @@ import ExpressError from "./expressError.js";
 
 export const userAuth = async (req, res, next) => {
   try {
-    const token =
+    const token  =
       req.cookies?.accessToken || req.headers?.authorization?.split(" ")[1];
     if (!token) {
       throw new ExpressError(401, "User not authenticated");

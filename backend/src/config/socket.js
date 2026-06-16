@@ -11,26 +11,23 @@ import routeHandler from "../socket/routeHandler.js";
 export const initSocket = (httpServer) => {
   const io = new Server(httpServer, {
     cors: {
-      origin: "http://localhost:3000",
+      origin: process.env.CLIENT_ORIGIN || "http://localhost:3000",
       credentials: true,
       methods: ["GET", "POST"],
     },
     transports: ["websocket", "polling"],
+    pingTimeout: 60000,
+    pingInterval: 25000,
   });
 
-  // auth middleware
+  // Auth middleware — extract user from cookie token
   io.use((socket, next) => {
     try {
       const cookieHeader = socket.handshake.headers.cookie;
-
-      if (!cookieHeader) {
-        // don't allow websockets , and not block polling
-        return next();
-      }
+      if (!cookieHeader) return next();
 
       const cookies = cookie.parse(cookieHeader);
       const token = cookies.accessToken;
-
       if (!token) return next();
 
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -40,31 +37,32 @@ export const initSocket = (httpServer) => {
 
       next();
     } catch (err) {
-      console.error("Socket auth error:", err.message);
-      next(); // do not block connection
+      // Don't block connection — unauthenticated sockets are handled downstream
+      console.warn("Socket auth warning:", err.message);
+      next();
     }
   });
 
-  // connection handler
+  // Connection handler
   io.on("connection", (socket) => {
-    console.log("🟢 Socket connected:", socket.id);
+    console.log("🟢 Socket connected:", socket.id, socket.userId ? `(user: ${socket.userId})` : "(unauthenticated)");
 
     if (socket.userId) {
       addUser(socket.userId, socket.id);
       socket.join(socket.userId.toString());
       if (socket.role) socket.join(socket.role);
-    } else {
-      console.warn("⚠️ Unauthenticated socket:", socket.id);
     }
 
-    // handlers
+    // Register event handlers
     locationHandler(io, socket);
     rescueChatHandler(io, socket);
     routeHandler(io, socket);
 
-    socket.on("disconnect", () => {
-      removeUser(socket.userId);
-      console.log("Socket disconnected:", socket.id);
+    socket.on("disconnect", (reason) => {
+      if (socket.userId) {
+        removeUser(socket.userId);
+      }
+      console.log("🔴 Socket disconnected:", socket.id, `(${reason})`);
     });
   });
 
